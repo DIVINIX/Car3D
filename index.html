@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>Car3D</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+
+      #formLeft {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: #efefef;
+      }
+
+      #formRight {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: #efefef;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="formLeft">
+      <div style="text-align: center">
+      <label id="vitesseLabel"> Vitesse : </label>
+        <input class="custom-slider" type="range" id="vitesse" name="kmh" min="0" max="10" step="1" value="0" oninput="speedChange(this.value)">
+      </div>
+      <div style="text-align: center">
+        <input type="button" name="RUN" id="buttonRun" onclick="run()" value="Run" />
+        <input type="button" name="RUN" id="camera0" onclick="changeCamera(0)" value="Cam1" />
+        <input type="button" name="RUN" id="camera1" onclick="changeCamera(1)" value="Cam2" />
+      </div>
+    </form>
+
+  	<form id="formRight">
+    		<div style="text-align: center">
+          <h3>Circuit</h3>
+    			<p>Ajout rail</p>
+    			<input type="button" onclick="addTrack(1)" value="Gauche"/>
+          <input type="button" onclick="addTrack(0)" value="Ligne"/>
+    			<input type="button" onclick="addTrack(2)" value="Droite"/>
+          <p>Supression rail</p>
+          <input type="button" onclick="addTrack(-1)" value="Remove"/>
+  		</div>
+  	</form>
+
+  	<!-- Libraries -->
+    <script src="https://threejs.org/build/three.min.js"></script>
+    <script src="Ressources/GLTFLoader.js"></script>
+    <script src="Ressources/OrbitControls.js"></script>
+
+    <!-- Sources -->
+    <script src="src/track.js"></script>
+    <script src="src/camera.js"></script>
+    <script>
+
+
+	// création du renderer
+  	var renderer = new THREE.WebGLRenderer();
+  	document.body.appendChild(renderer.domElement);
+  	renderer.setSize(window.innerWidth, window.innerHeight);
+
+  	// création de la caméra
+  	var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 1000);
+
+  	// création de la scène
+  	var scene = new THREE.Scene();
+
+  	// couleur de fond noire
+  	scene.background = new THREE.Color(0, 0, 0);
+
+
+	// Préparation du circuit
+	var path = new THREE.CurvePath();
+    var group = new THREE.Group();
+    scene.add(group);
+
+    // Préparation des objets
+    var loader = new THREE.GLTFLoader();
+    var voiture = new THREE.Mesh()
+    var tabGeo = Array();
+    var tabMat = Array();
+
+    // Chargement des objets
+    loader.load('Ressources/circuit.glb', function (gltf) {
+
+        var sceneGLTF = gltf.scene;
+        tabGeo.push(sceneGLTF.children[0].geometry);
+        tabMat.push(sceneGLTF.children[0].material);
+        tabGeo.push(sceneGLTF.children[1].geometry);
+        tabMat.push(sceneGLTF.children[1].material);
+        tabGeo.push(sceneGLTF.children[2].geometry);
+        tabMat.push(sceneGLTF.children[2].material);
+        tabGeo.push(sceneGLTF.children[3].geometry);
+        tabMat.push(sceneGLTF.children[3].material);
+
+        loading();
+      }, function ( xhr ) {
+        console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+      }, function (error) {
+        console.error(error);
+    });
+
+		
+	// Ambient light
+	var ambientLight = new THREE.AmbientLight(0xffffff, .1);
+	scene.add(ambientLight);
+
+	// Directional light
+	var directionalLight1 = new THREE.DirectionalLight(0xffdddd, 1);
+	directionalLight1.position.set(5,3,5);
+	scene.add(directionalLight1);
+
+	// Directional light
+	var directionalLight2 = new THREE.DirectionalLight(0xffdddd, 1);
+	directionalLight2.position.set(-5,2,-5);
+	scene.add(directionalLight2);
+
+	camera.position.z = 30;
+	camera.position.y = 5
+
+	var vitesse = 1;
+
+	var start = null;
+
+	// Création du contrôleur
+	var controls = new THREE.OrbitControls(camera, renderer.domElement);
+	controls.minDistance = 2;
+	controls.maxDistance = 30;
+
+
+
+	function loading() {
+
+		// Chargement de la voiture
+		var vGeometry = new THREE.BufferGeometry().copy(tabGeo[3]);
+		var vMaterial = tabMat[3];
+		voiture  = new THREE.Mesh(vGeometry, vMaterial);
+		scene.add(voiture);
+
+		// Ajout du premier rail
+		addTrack(0);
+
+		// Lancement de l'animation
+		requestAnimationFrame(animate);
+	}
+
+  // Gestion manuelle de t
+  var t = 0;
+  var debug = 0.0000001;
+	function animate() {
+		// mise à jour du contrôleur
+		controls.update();
+
+		if (start == null) {
+		  start = t;
+		}
+		var delai = t - start;
+
+		// mise à jour de la caméra
+		if (camType)
+		{
+		  camera.lookAt(voiture.position);
+		}
+
+		// Mouvement de la voiture
+    if (runState)
+    {
+      t += vitesse - debug;
+      var acceleration = path.getPoint((delai * .001) % 1);
+      voiture.position.x = acceleration.x;
+      voiture.position.z = acceleration.z;
+    }
+
+		//angleRotation = (acceleration.x-oldAcceleration.x) + (acceleration.z-oldAcceleration.z);
+		//voiture.rotateY(angleRotation*(Math.PI/2));
+
+		requestAnimationFrame(animate);
+		renderer.render(scene, camera);
+	}
+
+    </script>
+  </body>
+</html>
