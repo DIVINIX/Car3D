@@ -72,8 +72,17 @@
     // création de la scène
     var scene = new THREE.Scene();
 
-    // couleur de fond noire
-    scene.background = new THREE.Color(0, 0, 0);
+    // background
+    scene.background = new THREE.CubeTextureLoader()
+        .setPath( 'Ressources/' )
+        .load( [
+            '1_2_5_6.jpg',
+            '1_2_5_6.jpg',
+            'plafond3.jpg',
+            'plancher4.jpg',
+            '1_2_5_6.jpg',
+            '1_2_5_6.jpg'
+        ] );
 
 
     // Préparation du circuit
