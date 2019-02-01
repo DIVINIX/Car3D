@@ -31,7 +31,8 @@
             <input class="custom-slider" type="range" id="vitesse" name="kmh" min="0" max="10" step="1" value="0" oninput="speedChange(this.value)">
         </div>
         <div style="text-align: center">
-            <input type="button" name="RUN" id="buttonRun" onclick="run()" value="Run" />
+            <input type="button" name="RUN" id="buttonRun" onclick="run();play();" value="Run" />
+            <audio id="audio" src="Ressources/music.mp3" ></audio>s
             <input type="button" name="RUN" id="camera0" onclick="changeCamera(0)" value="Cam1" />
             <input type="button" name="RUN" id="camera1" onclick="changeCamera(1)" value="Cam2" />
         </div>
@@ -106,6 +107,11 @@
         console.error(error);
     });
 
+    // musique 
+    function play(){
+       var audio = document.getElementById("audio");
+       audio.play();
+   }
 
     // Ambient light
     var ambientLight = new THREE.AmbientLight(0xffffff, .1);
